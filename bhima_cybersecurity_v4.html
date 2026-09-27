@@ -1,0 +1,41 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bhima Cybersecurity</title><style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#06101d,#12314c);color:#eef7ff}.wrap{max-width:900px;width:92%;margin:auto;padding:34px 0}.brand{text-align:center}.shield{font-size:52px}.brand h1{font-size:38px;margin:5px}.brand p{color:#a9c0d5}.card{margin-top:24px;background:#ffffff10;border:1px solid #ffffff25;border-radius:22px;padding:26px;box-shadow:0 18px 55px #0007}label{display:block;font-weight:bold;margin:15px 0 7px}input,textarea{width:100%;padding:14px;border-radius:11px;border:1px solid #405b73;background:#071522;color:#fff;font-size:15px}textarea{height:180px;resize:vertical}button{width:100%;margin-top:18px;padding:15px;border:0;border-radius:11px;background:#167cf3;color:#fff;font-weight:bold;font-size:16px;cursor:pointer}.loader{display:none;text-align:center;margin:22px}.spinner{width:44px;height:44px;border:4px solid #304b62;border-top-color:#43a7ff;border-radius:50%;margin:auto;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.scan{margin-top:9px;color:#9fc9eb}.result{margin-top:20px;padding:22px;border-radius:16px;border:1px solid}.normal{background:#09351f;border-color:#22c55e}.suspicious{background:#493306;border-color:#f59e0b}.fraud{background:#491414;border-color:#ef4444}.normal h2{color:#4ade80}.suspicious h2{color:#fbbf24}.fraud h2{color:#ff7373}.box{background:#06121e;padding:13px;border-radius:9px;word-break:break-word;line-height:1.55}.tip{margin-top:18px;padding:14px;background:#09294a;border-radius:10px;line-height:1.55}.small{font-size:13px;color:#9db4c9;line-height:1.5}.back{background:#293b4d}
+</style></head><body><div id="app"></div><script>
+const app=document.getElementById("app");
+function home(){app.innerHTML=`<div class="wrap"><div class="brand"><div class="shield">🛡️</div><h1>Bhima Cybersecurity</h1><p>Public Message Fraud Detection System</p></div><div class="card"><label>Enter Sender ID or Number</label><input id="sender" placeholder="Example: HDFCBANK / +91 9876543210"><label>Enter the Message</label><textarea id="msg" placeholder="Paste the complete message here... English / తెలుగు / हिन्दी"></textarea><button id="analyze">🔍 Analyze Message</button><div id="loader" class="loader"><div class="spinner"></div><div class="scan">Scanning message...</div></div><p class="small">This prototype estimates risk from message and sender indicators. It cannot prove authenticity.</p></div></div>`;document.getElementById("analyze").onclick=analyze}
+function analyze(){let s=document.getElementById("sender").value.trim(),m=document.getElementById("msg").value.trim();if(!m){alert("Please enter the message.");return}document.getElementById("analyze").disabled=true;document.getElementById("loader").style.display="block";setTimeout(()=>{let d=detect(s,m);sessionStorage.setItem("bhima",JSON.stringify(d));location.hash="result";show(d)},1400)}
+function detect(sender,msg){
+let t=(sender+" "+msg).toLowerCase(),score=0,reasons=[];
+const add=(n,r)=>{score+=n;reasons.push(r)};
+const has=x=>x.test(t);
+
+// Direct high-confidence scam patterns
+if(has(/otp|one[- ]time password|ఓటిపి|ओटीपी/)) add(4,"OTP is mentioned.");
+if(has(/upi\s*pin|atm\s*pin|pin\s*number|cvv|password|card\s*details|bank\s*details|యూపీఐ\s*పిన్|पासवर्ड|सीवीवी|बैंक विवरण/)) add(6,"Sensitive banking credentials are mentioned.");
+if(has(/https?:\/\/|www\./)) add(3,"A clickable web link is present.");
+if(has(/bit\.ly|tinyurl|t\.co|goo\.gl|cutt\.ly|rb\.gy|shorturl/)) add(4,"A shortened URL is present.");
+if(has(/click|tap|open|login|verify|update|confirm|activate|क्लिक|लिंक|वेरिफाई|अपडेट|लॉगिन|క్లిక్|లింక్|వెరిఫై|అప్‌డేట్/)) add(3,"The recipient is asked to click, verify, log in, or update.");
+if(has(/urgent|immediately|now|last warning|within \d+|account.*blocked|account.*suspend|account.*close|legal action|तुरंत|खाता.*बंद|ब्लॉक|वेंटనే|తక్షణం|ఖాతా.*బ్లాక్/)) add(4,"Urgent or threatening language is used.");
+if(has(/prize|winner|won|lottery|reward|cashback|free gift|congratulations|इनाम|लॉटरी|रिवॉर्ड|बधाई|బహుమతి|లాటరీ|రివార్డ్|అభినందనలు/)) add(4,"An unexpected prize or reward is promised.");
+if(has(/kyc|refund|electricity bill|gas bill|parcel|delivery|केवाईसी|रिफंड|बिजली बिल|पार्सल|కెవైసి|రిఫండ్|కరెంట్ బిల్|పార్సెల్/)) add(3,"A common impersonation/scam theme is used.");
+if(has(/send.*money|transfer.*money|pay.*money|payment|upi|qr code|scan.*qr|पैसे भेज|भुगतान|स्कैन.*क्यूआर|డబ్బు పంప|చెల్లింపు|qr/)) add(5,"The message requests or facilitates a payment or money transfer.");
+if(has(/aadhaar|aadhar|pan card|personal details|date of birth|आधार|पैन|व्यक्तिगत जानकारी|ఆధార్|పాన్|వ్యక్తిగత వివరాలు/)) add(2,"Personal information is requested.");
+
+// Strong combinations
+if(has(/otp/) && has(/click|link|verify/)) add(6,"OTP is combined with a link or verification request.");
+if(has(/bank|account|kyc/) && has(/blocked|suspend|close|urgent/)) add(6,"Bank/account/KYC content is combined with a threat or urgency.");
+if(has(/upi|payment|pay|money/) && has(/send|transfer|qr|scan/)) add(6,"Payment language is combined with a transfer or QR instruction.");
+if(has(/prize|winner|lottery|reward/) && has(/click|link|claim/)) add(6,"A prize/reward claim is combined with an action or link.");
+if(has(/refund/) && has(/click|link|pay|bank|upi/)) add(5,"A refund claim is combined with a link or payment/banking request.");
+
+if(!sender)add(1,"Sender information was not provided.");
+if(/^\+?\d[\d\s-]{8,}$/.test(sender)&&score>0)add(2,"The sender is a phone number rather than a recognizable service ID.");
+
+score=Math.min(score,30);
+let level=score>=9?"fraud":score>=4?"suspicious":"normal";
+return{sender,msg,score,level,title:level==="fraud"?"Potential Fraud":level==="suspicious"?"Suspicious Message":"Likely Normal",reasons:[...new Set(reasons)]};
+}
+function esc(x){return String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function show(d){let icon=d.level==="fraud"?"🔴":d.level==="suspicious"?"🟠":"🟢";app.innerHTML=`<div class="wrap"><div class="brand"><div class="shield">🛡️</div><h1>Bhima Cybersecurity</h1><p>Analysis Result</p></div><div class="card"><div class="result ${d.level}"><h2>${icon} ${d.title}</h2><b>Risk Score: ${d.score}/30</b><h3>Sender</h3><div class="box">${esc(d.sender||"Not provided")}</div><h3>Message</h3><div class="box">${esc(d.msg)}</div><h3>Common signs detected</h3>${d.reasons.length?"<ul>"+d.reasons.map(r=>"<li>"+esc(r)+"</li>").join("")+"</ul>":"<p>No common indicators detected.</p>"}<div class="tip"><b>Safety advice:</b> Never share OTP, UPI PIN, password, CVV or banking details. Do not use links from suspicious messages. Verify through the official app or website.</div><p class="small">This is a CSP prototype. It estimates risk; it cannot guarantee that a message is genuine or fraudulent.</p></div><button class="back" onclick="location.hash='';home()">← Check Another Message</button></div></div>`}
+if(location.hash==="#result"){try{let d=JSON.parse(sessionStorage.getItem("bhima"));d?show(d):home()}catch(e){home()}}else home();
+</script></body></html>
